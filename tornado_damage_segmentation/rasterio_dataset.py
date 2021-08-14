@@ -25,5 +25,5 @@ class RasterioDataset(Dataset):
     def load_rasters(self):
         for _, _, files in os.walk(self.image_path):
             for file in files:
-                self.rasters.append((rasterio.open(os.path.join(self.image_path, file),
-                                                   rasterio.open(os.path.join(self.mask_path, file)))))
+                self.rasters.append((rasterio.open(os.path.join(self.image_path, file)),
+                                     rasterio.open(os.path.join(self.mask_path, file))))
