@@ -12,8 +12,7 @@ def get_rasters():
     rasters = []
     for root, dirs, files in os.walk(raster_path):
         for file in files:
-            if file[-3:] == 'tif':
-                rasters.append(rasterio.open(os.path.join(root, file)))
+            rasters.append(rasterio.open(os.path.join(root, file)))
     return rasters
 
 
