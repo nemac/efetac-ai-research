@@ -8,8 +8,8 @@ class NeuralNet(nn.Module):
 
     def __init__(self):
         super(NeuralNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 20, 10)
-        self.conv2 = nn.Conv2d(20, 2, 10)  # There are 2 possible states: tornado damage and no tornado damage
+        self.conv1 = nn.Conv2d(1, 1, 10)
+        self.conv2 = nn.Conv2d(1, 1, 10)  # There are 2 possible states: tornado damage and no tornado damage
         self.loss = nn.CrossEntropyLoss()
         self.optimizer = torch.optim.Adam(self.parameters(), lr=1e-5)
 
