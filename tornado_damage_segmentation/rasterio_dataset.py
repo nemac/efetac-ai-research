@@ -21,8 +21,11 @@ class RasterioDataset(Dataset):
         return len(self.rasters)
 
     def __getitem__(self, index):
-        # raster.read(1) enclosed in brackets to represent the single color channel dimension for the image
-        return tuple([np.array([raster.read(1)]) for raster in self.rasters[index]])
+        # expand_dims used for raster.read(1) to create a single color channel in the channels-last style
+        item = [np.expand_dims(raster.read(1), axis=2) for raster in self.rasters[index]]
+        if self.transform:
+            item = [self.transform(arr) for arr in item]
+        return tuple(item)
 
     # Generates tuples of data, mask pairs
     def load_rasters(self):
