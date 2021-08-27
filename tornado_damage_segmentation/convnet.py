@@ -27,10 +27,10 @@ test_loader = DataLoader(test_data)
 def test(verbose=False):
     accuracies = []
     for raster, mask in test_loader:
-        print(raster.shape)
-        print(mask.shape)
+        print("raster shape: " + str(raster.shape))
+        print("mask shape: " + str(mask.shape))
         output = model(raster)
-        print(output.shape)
+        print("output shape: " + str(output.shape))
         accuracies.append(np.average(mask == output.argmax(dim=1)))
         if verbose:
             print(accuracies[-1])
