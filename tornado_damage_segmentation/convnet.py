@@ -3,9 +3,9 @@ import torch
 from torch.utils.data import DataLoader, random_split
 import torchvision
 from matplotlib import pyplot as plt
-from tornado_damage_segmentation.config import raster_dir, mask_dir
-from tornado_damage_segmentation.neural_net import NeuralNet
-from tornado_damage_segmentation.rasterio_dataset import RasterioDataset
+from config import raster_dir, mask_dir
+from neural_net import NeuralNet
+from rasterio_dataset import RasterioDataset
 
 # Parameters
 test_set_size = 50

@@ -4,7 +4,7 @@ import numpy as np
 import rasterio
 import rasterio.mask
 import fiona
-from tornado_damage_segmentation.config import get_rasters, mask_dir, shapefile_path
+from config import get_rasters, mask_dir, shapefile_path
 
 # Get shapefile, shapes, and storm dates
 shapefile = fiona.open(shapefile_path)
