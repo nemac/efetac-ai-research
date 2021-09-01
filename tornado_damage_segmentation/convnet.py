@@ -3,6 +3,7 @@ import torch
 from torch.utils.data import DataLoader, random_split
 import torchvision
 from matplotlib import pyplot as plt
+import segmentation_models_pytorch as smp
 from config import raster_dir, mask_dir
 from neural_net import NeuralNet
 from rasterio_dataset import RasterioDataset
@@ -11,10 +12,10 @@ from rasterio_dataset import RasterioDataset
 test_set_size = 50
 num_training_epochs = 10
 test_epoch_period = 2
-model = NeuralNet()
+model = NeuralNet(loss=torch.nn.CrossEntropyLoss())
 
 # Load data
-data = RasterioDataset(raster_dir, mask_dir, torchvision.transforms.ToTensor())
+data = RasterioDataset(raster_dir, mask_dir, transform=torchvision.transforms.ToTensor())
 
 # Split into training and testing sets and create data loaders
 train_data, test_data = random_split(data, [len(data) - test_set_size, test_set_size])
@@ -31,6 +32,7 @@ def test(verbose=False):
         print("mask shape: " + str(mask.shape))
         output = model(raster)
         print("output shape: " + str(output.shape))
+        smp.losses.JaccardLoss(mode='binary').forward()
         accuracies.append(np.average(mask == output.argmax(dim=1)))
         if verbose:
             print(accuracies[-1])
