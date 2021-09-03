@@ -38,7 +38,7 @@ class RasterioDataset(Dataset):
         item[0] = np.expand_dims(item[0], axis=2)
         if self.transform:
             item[0] = self.transform(item[0])
-            item[1] = torch.from_numpy(item[1]).type(torch.LongTensor)  # Cast to long
+        item[1] = torch.from_numpy(item[1]).type(torch.LongTensor)  # Cast to long
         return tuple(item)
 
     # Reads a raster, but only returns the values within the rectangular bounding box specified by bbox_coords, if
