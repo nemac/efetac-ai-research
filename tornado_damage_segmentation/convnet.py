@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, random_split
@@ -15,7 +16,8 @@ test_epoch_period = 2
 model = NeuralNet(loss=torch.nn.CrossEntropyLoss())
 
 # Load data
-data = RasterioDataset(raster_dir, mask_dir, bbox_coords=(261044, -1575260, 1821142, -564527),
+bbox_coords = [float(arg) for arg in sys.argv[1:]]
+data = RasterioDataset(raster_dir, mask_dir, bbox_coords,
                        transform=torchvision.transforms.ToTensor())
 
 # Split into training and testing sets and create data loaders
@@ -48,11 +50,11 @@ for i in range(num_training_epochs):
         #accuracies.append(test())
         #print(i, accuracies[-1])
     for rasters, masks in train_loader:
-        print(rasters.shape)
-        print(masks.shape)
+        print('raster shape: ', rasters.shape)
+        print('mask shape: ', masks.shape)
         output = model(rasters)
-        print(output.shape)
-        # Cross entropy loss requires one-hot output and a non-one-hot target with labels 0...N where N is the length
+        print('output shape: ', output.shape)
+        # Cross entropy loss requires one-hot output and a non-one-hot target with labels 0...N-1 where N is the length
         # of the one-hot vectors
         loss = model.loss(output, masks)
         model.optimizer.zero_grad()

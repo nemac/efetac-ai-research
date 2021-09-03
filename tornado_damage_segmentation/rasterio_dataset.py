@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import torch
 from torch.utils.data import Dataset
 import rasterio
 
@@ -16,7 +17,7 @@ class RasterioDataset(Dataset):
     bbox_coords - the coordinates of a rectangular geospatial bounding box defining what part of the raster data will
     be read. They should be expressed as a 4-dimensional vector like (left, bottom, right, top). If None, the entire
     # data will be read (default: None)\n
-    transform - the transform to use on each raster when it's read (default: None)
+    transform - the transform to use on each raster when it's read (default: None) \n
     """
 
     def __init__(self, image_path, mask_path, bbox_coords=None, transform=None):
@@ -32,10 +33,12 @@ class RasterioDataset(Dataset):
         return len(self.rasters)
 
     def __getitem__(self, index):
+        item = [self.read_within_bounding_box(raster) for raster in self.rasters[index]]
         # expand_dims used to create a single color channel in the channels-last style
-        item = [np.expand_dims(self.read_within_bounding_box(raster), axis=2) for raster in self.rasters[index]]
+        item[0] = np.expand_dims(item[0], axis=2)
         if self.transform:
-            item = [self.transform(arr) for arr in item]
+            item[0] = self.transform(item[0])
+            item[1] = torch.from_numpy(item[1]).type(torch.LongTensor)  # Cast to long
         return tuple(item)
 
     # Reads a raster, but only returns the values within the rectangular bounding box specified by bbox_coords, if
