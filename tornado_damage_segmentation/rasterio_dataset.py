@@ -14,8 +14,8 @@ class RasterioDataset(Dataset):
     image_path - the path to the folder containing raster images\n
     mask_path - the path to the folder containing raster masks\n
     bbox_coords - the coordinates of a rectangular geospatial bounding box defining what part of the raster data will
-    be read. They should be expressed as a 4-dimensional vector like (top_left_corner_x, top_left_corner_y,
-    bottom_right_corner_x, bottom_right_corner_y). If None, the entire data will be read (default: None)\n
+    be read. They should be expressed as a 4-dimensional vector like (left, bottom, right, top). If None, the entire
+    # data will be read (default: None)\n
     transform - the transform to use on each raster when it's read (default: None)
     """
 

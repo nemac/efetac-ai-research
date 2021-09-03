@@ -15,7 +15,8 @@ test_epoch_period = 2
 model = NeuralNet(loss=torch.nn.CrossEntropyLoss())
 
 # Load data
-data = RasterioDataset(raster_dir, mask_dir, transform=torchvision.transforms.ToTensor())
+data = RasterioDataset(raster_dir, mask_dir, bbox_coords=(261044, -1575260, 1821142, -564527),
+                       transform=torchvision.transforms.ToTensor())
 
 # Split into training and testing sets and create data loaders
 train_data, test_data = random_split(data, [len(data) - test_set_size, test_set_size])
@@ -32,7 +33,7 @@ def test(verbose=False):
         print("mask shape: " + str(mask.shape))
         output = model(raster)
         print("output shape: " + str(output.shape))
-        smp.losses.JaccardLoss(mode='binary').forward()
+        # smp.losses.JaccardLoss(mode='binary').forward()
         accuracies.append(np.average(mask == output.argmax(dim=1)))
         if verbose:
             print(accuracies[-1])
@@ -40,22 +41,26 @@ def test(verbose=False):
 
 
 # Train the neural network
-"""accuracies = []
+accuracies = []
 for i in range(num_training_epochs):
     if i % test_epoch_period == 0:
-        accuracies.append(test())
-        print(i, accuracies[-1])
+        pass
+        #accuracies.append(test())
+        #print(i, accuracies[-1])
     for rasters, masks in train_loader:
+        print(rasters.shape)
+        print(masks.shape)
         output = model(rasters)
+        print(output.shape)
         # Cross entropy loss requires one-hot output and a non-one-hot target with labels 0...N where N is the length
         # of the one-hot vectors
         loss = model.loss(output, masks)
         model.optimizer.zero_grad()
         loss.backward()
-        model.optimizer.step()"""
+        model.optimizer.step()
 
 # Final evaluation
-test(verbose=True)
+#test(verbose=True)
 #accuracies.append(test(verbose=True))
 #print('Final accuracy: ', accuracies[-1])
 #plt.plot(range(len(accuracies)), accuracies)
