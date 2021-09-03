@@ -16,7 +16,7 @@ class RasterioDataset(Dataset):
     mask_path - the path to the folder containing raster masks\n
     bbox_coords - the coordinates of a rectangular geospatial bounding box defining what part of the raster data will
     be read. They should be expressed as a 4-dimensional vector like (left, bottom, right, top). If None, the entire
-    # data will be read (default: None)\n
+    data will be read (default: None)\n
     transform - the transform to use on each raster when it's read (default: None) \n
     """
 
@@ -38,7 +38,7 @@ class RasterioDataset(Dataset):
         item[0] = np.expand_dims(item[0], axis=2)
         if self.transform:
             item[0] = self.transform(item[0])
-        item[1] = torch.from_numpy(item[1]).type(torch.LongTensor)  # Cast to long
+        item[1] = torch.from_numpy(item[1]).type(torch.LongTensor)  # Cast to long required for loss functions
         return tuple(item)
 
     # Reads a raster, but only returns the values within the rectangular bounding box specified by bbox_coords, if

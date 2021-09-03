@@ -30,15 +30,18 @@ test_loader = DataLoader(test_data)
 # TODO update accuracy measure. It can currently get very high by guessing all zeros
 def test(verbose=False):
     accuracies = []
-    for raster, mask in test_loader:
-        print("raster shape: " + str(raster.shape))
-        print("mask shape: " + str(mask.shape))
-        output = model(raster)
-        print("output shape: " + str(output.shape))
-        # smp.losses.JaccardLoss(mode='binary').forward()
-        accuracies.append(np.average(mask == output.argmax(dim=1)))
-        if verbose:
-            print(accuracies[-1])
+    model.eval()
+    with torch.no_grad():
+        for raster, mask in test_loader:
+            print("raster shape: " + str(raster.shape))
+            print("mask shape: " + str(mask.shape))
+            output = model(raster)
+            print("output shape: " + str(output.shape))
+            jaccard_index = 1 - smp.losses.JaccardLoss(mode='multiclass').forward(output, mask)
+            accuracies.append(jaccard_index)
+            if verbose:
+                print(accuracies[-1])
+    model.train()
     return np.average(accuracies)
 
 
@@ -46,9 +49,8 @@ def test(verbose=False):
 accuracies = []
 for i in range(num_training_epochs):
     if i % test_epoch_period == 0:
-        pass
-        #accuracies.append(test())
-        #print(i, accuracies[-1])
+        accuracies.append(test())
+        print(i, accuracies[-1])
     for rasters, masks in train_loader:
         print('raster shape: ', rasters.shape)
         print('mask shape: ', masks.shape)
