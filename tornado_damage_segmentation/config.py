@@ -1,15 +1,18 @@
 import os
 import rasterio
 
-# File paths
+# File paths for data
 assets_dir = 'data'
 raster_dir = os.path.join(assets_dir, 'ForWarn_Data')
 mask_dir = os.path.join(assets_dir, 'ForWarn_Masks')
 shapefile_dir = os.path.join(assets_dir, 'extractDamage2016_2021')
 shapefile_path = os.path.join(shapefile_dir, 'polys_2163', 'polys_2163.shp')
 
+# File paths for saved models
+models_dir = 'models'
+
 # Create necessary directories
-for directory in [assets_dir, raster_dir, mask_dir, shapefile_dir]:
+for directory in [assets_dir, raster_dir, mask_dir, shapefile_dir, models_dir]:
     if not os.path.exists(directory):
         os.mkdir(directory)
 

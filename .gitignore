@@ -127,4 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# User-added directories
 /tornado_damage_segmentation/data/
+/tornado_damage_segmentation/models/

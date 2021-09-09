@@ -26,10 +26,11 @@ train_loader = DataLoader(train_data, batch_size=10, shuffle=True)
 test_loader = DataLoader(test_data)
 
 
-# Tests the neural network, returning average accuracy
-# TODO update accuracy measure. It can currently get very high by guessing all zeros
+# Tests the neural network, returning average accuracies
+# TODO update accuracy measure.
 def test(verbose=False):
-    accuracies = []
+    pixel_accuracies = []
+    iou_accuracies = []
     model.eval()
     with torch.no_grad():
         for raster, mask in test_loader:
@@ -37,12 +38,13 @@ def test(verbose=False):
             print("mask shape: " + str(mask.shape))
             output = model(raster)
             print("output shape: " + str(output.shape))
-            jaccard_index = 1 - smp.losses.JaccardLoss(mode='multiclass').forward(output, mask)
-            accuracies.append(jaccard_index)
+            pixel_accuracies.append(np.mean((output.argmax(axis=1) == mask).numpy()))
+            iou_accuracies.append(1 - smp.losses.JaccardLoss(mode='multiclass').forward(output, mask).item())
             if verbose:
-                print(accuracies[-1])
+                print('Pixel Accuracy: ', pixel_accuracies[-1])
+                print('IoU: ', iou_accuracies[-1])
     model.train()
-    return np.average(accuracies)
+    return {'pixel accuracy': np.mean(pixel_accuracies), 'iou': np.mean(iou_accuracies)}
 
 
 # Train the neural network
@@ -65,6 +67,6 @@ for i in range(num_training_epochs):
 
 # Final evaluation
 #test(verbose=True)
-#accuracies.append(test(verbose=True))
-#print('Final accuracy: ', accuracies[-1])
-#plt.plot(range(len(accuracies)), accuracies)
+accuracies.append(test(verbose=True))
+print('Final accuracy: ', accuracies[-1])
+plt.plot(range(len(accuracies)), accuracies)
