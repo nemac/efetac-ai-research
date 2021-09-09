@@ -1,8 +1,6 @@
-import sys
+import sys, time, torch, torchvision
 import numpy as np
-import torch
 from torch.utils.data import DataLoader, random_split
-import torchvision
 from matplotlib import pyplot as plt
 import segmentation_models_pytorch as smp
 from config import raster_dir, mask_dir
@@ -34,6 +32,7 @@ def test(verbose=False):
     model.eval()
     with torch.no_grad():
         for raster, mask in test_loader:
+            print("Start : %s" % time.ctime())
             print("raster shape: " + str(raster.shape))
             print("mask shape: " + str(mask.shape))
             output = model(raster)
@@ -43,6 +42,7 @@ def test(verbose=False):
             if verbose:
                 print('Pixel Accuracy: ', pixel_accuracies[-1])
                 print('IoU: ', iou_accuracies[-1])
+            print("End : %s" % time.ctime() + "\n")
     model.train()
     return {'pixel accuracy': np.mean(pixel_accuracies), 'iou': np.mean(iou_accuracies)}
 
@@ -54,6 +54,7 @@ for i in range(num_training_epochs):
         accuracies.append(test())
         print(i, accuracies[-1])
     for rasters, masks in train_loader:
+        print("Start : %s" % time.ctime())
         print('raster shape: ', rasters.shape)
         print('mask shape: ', masks.shape)
         output = model(rasters)
@@ -64,6 +65,7 @@ for i in range(num_training_epochs):
         model.optimizer.zero_grad()
         loss.backward()
         model.optimizer.step()
+        print("End : %s" % time.ctime() + "\n")
 
 # Final evaluation
 #test(verbose=True)

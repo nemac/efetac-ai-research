@@ -131,3 +131,4 @@ dmypy.json
 # User-added directories
 /tornado_damage_segmentation/data/
 /tornado_damage_segmentation/models/
+/jeff/
