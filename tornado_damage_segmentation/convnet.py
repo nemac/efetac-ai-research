@@ -57,6 +57,7 @@ def iou(prediction, target, soft=False, reduce=True, zero_over_zero_score=1):
 
 
 # Tests the neural network, returning average accuracies
+# TODO clean up that return statement
 def test(verbose=False):
     accuracies = []
     model.eval()
