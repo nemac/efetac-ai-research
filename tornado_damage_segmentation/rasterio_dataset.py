@@ -3,6 +3,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 import rasterio
+from mask_not_present_warning import MaskNotPresentWarning
 
 
 class RasterioDataset(Dataset):
@@ -20,7 +21,7 @@ class RasterioDataset(Dataset):
     transform - the transform to use on each raster when it's read (default: None) \n
     """
 
-    def __init__(self, image_path, mask_path, bbox_coords=None, transform=None):
+    def __init__(self, image_path: str, mask_path: str, bbox_coords: tuple = None, transform: tuple = None):
         super().__init__()
         self.image_path = image_path
         self.mask_path = mask_path
@@ -53,8 +54,12 @@ class RasterioDataset(Dataset):
     def load_rasters(self):
         for path, dirs, files in os.walk(self.image_path):
             for file in files:
-                try:
-                    self.rasters.append((rasterio.open(os.path.join(path, file)),
-                                         rasterio.open(os.path.join(self.mask_path, file))))
-                except rasterio.errors.RasterioIOError:
-                    pass  # If there is no corresponding mask file, skip this image
+                image_path = os.path.join(path, file)
+                mask_path = os.path.join(self.mask_path, file)
+                if os.path.exists(mask_path):
+                    self.rasters.append((rasterio.open(image_path), rasterio.open(mask_path)))
+                    continue
+                # If there is no corresponding mask file, skip this image and warn
+                raise MaskNotPresentWarning(image_path, mask_path, "The mask at " + mask_path
+                                            + " corresponding to the image at " + image_path
+                                            + " does not exist. This image will not be added to the dataset.")
