@@ -1,5 +1,5 @@
 import os
-import sys
+import argparse
 import time
 from matplotlib import pyplot as plt
 import torch
@@ -12,21 +12,28 @@ from rasterio_dataset import RasterioDataset
 from metrics import simple_pixel_accuracy, iou
 from evaluator import Evaluator
 
+# Command line arg processing
+parser = argparse.ArgumentParser()
+parser.add_argument('-s', '--model-save-path', type=str, nargs=1)
+parser.add_argument('-l', '--model-load-path', type=str, nargs=1)
+parser.add_argument('-b', '--bbox-coords', type=int, nargs=4)
+args = parser.parse_args()
+
 # Parameters
 test_set_size = 50
 num_training_epochs = 10
 test_epoch_period = 2
 model_save_period = 2
 model = NeuralNet(loss=torch.nn.CrossEntropyLoss())
+if args.model_load_path:
+    model.load(os.path.join(models_dir, args.model_load_path))
 evaluator = Evaluator(['Pixel accuracy', 'IoU', 'IoU by class', 'Soft IoU', 'Soft IoU by class'],
                       [simple_pixel_accuracy, iou, lambda pred, target: iou(pred, target, reduce=False),
                        lambda pred, target: iou(pred, target, soft=True),
                        lambda pred, target: iou(pred, target, soft=True, reduce=False)])
 
 # Load data
-bbox_coords = [float(arg) for arg in sys.argv[1:]]
-data = RasterioDataset(raster_dir, mask_dir, bbox_coords,
-                       transform=torchvision.transforms.ToTensor())
+data = RasterioDataset(raster_dir, mask_dir, args.bbox_coords, transform=torchvision.transforms.ToTensor())
 
 # Split into training and testing sets and create data loaders
 train_data, test_data = random_split(data, [len(data) - test_set_size, test_set_size])
@@ -65,7 +72,7 @@ for i in range(num_training_epochs):
         accuracies.append(test(verbose=True))
         print(i, accuracies[-1])
     if i % model_save_period == 0:
-        model.save(os.path.join(models_dir, str(time.ctime())), i)
+        model.save(os.path.join(models_dir, args.model_save_path + ' ' + str(time.ctime()) + ' ' + str(i)), i)
     for rasters, masks in train_loader:
         print("Start : %s" % time.ctime())
         print('raster shape: ', rasters.shape)

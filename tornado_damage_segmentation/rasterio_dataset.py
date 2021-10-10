@@ -1,4 +1,5 @@
 import os
+import warnings
 import numpy as np
 import torch
 from torch.utils.data import Dataset
@@ -60,6 +61,5 @@ class RasterioDataset(Dataset):
                     self.rasters.append((rasterio.open(image_path), rasterio.open(mask_path)))
                     continue
                 # If there is no corresponding mask file, skip this image and warn
-                raise MaskNotPresentWarning(image_path, mask_path, "The mask at " + mask_path
-                                            + " corresponding to the image at " + image_path
-                                            + " does not exist. This image will not be added to the dataset.")
+                warnings.warn('The mask at ' + mask_path + ' corresponding to the image at ' + image_path + ' does not'
+                              + ' exist. This image will not be added to the dataset.', MaskNotPresentWarning)

@@ -14,7 +14,7 @@ class Evaluator:
 
     def add_data_point(self, prediction, target):
         #self.data_points.append((prediction, target))
-        self.accuracies.append(map(lambda metric: metric(prediction, target), self.metrics))
+        self.accuracies.append(list(map(lambda metric: metric(prediction, target), self.metrics)))
 
     def average_accuracies(self):
         return np.mean(np.transpose(self.accuracies), axis=1).tolist()

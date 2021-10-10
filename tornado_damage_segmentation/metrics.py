@@ -28,7 +28,7 @@ def iou(prediction, target, soft=False, reduce=True, zero_over_zero_score=1):
         pred_positives = pred_positives.softmax(dim=0)
     else:
         # C, N x product(*dims) --> N x product(*dims) --> N x product(*dims), C --> C, N x product(*dims)
-        pred_positives = F.one_hot(pred_positives.argmax(axis=0)).transpose(0, 1)
+        pred_positives = F.one_hot(pred_positives.argmax(axis=0), num_classes=prediction.shape[1]).transpose(0, 1)
 
     intersection = torch.sum(pred_positives * true_positives, dim=1)
     union = torch.sum(pred_positives + true_positives, dim=1) - intersection
