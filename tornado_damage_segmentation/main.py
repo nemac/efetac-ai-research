@@ -1,6 +1,7 @@
 import os
 import argparse
 import time
+import functools
 from matplotlib import pyplot as plt
 import torch
 import torchvision
@@ -26,11 +27,20 @@ test_epoch_period = 2
 model_save_period = 2
 model = NeuralNet(loss=torch.nn.CrossEntropyLoss())
 if args.model_load_path:
-    model.load(os.path.join(models_dir, args.model_load_path))
-evaluator = Evaluator(['Pixel accuracy', 'IoU', 'IoU by class', 'Soft IoU', 'Soft IoU by class'],
-                      [simple_pixel_accuracy, iou, lambda pred, target: iou(pred, target, reduce=False),
-                       lambda pred, target: iou(pred, target, soft=True),
-                       lambda pred, target: iou(pred, target, soft=True, reduce=False)])
+    model.load(args.model_load_path[0])
+iou_by_class = functools.partial(iou, reduce=False)
+soft_iou = functools.partial(iou, soft=True)
+soft_iou_by_class = functools.partial(iou, soft=True, reduce=False)
+evaluator = Evaluator(['Pixel accuracy', 'IoU', 'IoU for negative class', 'IoU for positive class', 'Soft IoU',
+                       'Soft IoU for negative class', 'Soft IoU for positive class'],
+                      [simple_pixel_accuracy,
+                       iou,
+                       lambda pred, target: iou_by_class(pred, target)[0].item(),
+                       lambda pred, target: iou_by_class(pred, target)[1].item(),
+                       soft_iou,
+                       lambda pred, target: soft_iou_by_class(pred, target)[0].item(),
+                       lambda pred, target: soft_iou_by_class(pred, target)[1].item()
+                       ])
 
 # Load data
 data = RasterioDataset(raster_dir, mask_dir, args.bbox_coords, transform=torchvision.transforms.ToTensor())
@@ -67,18 +77,17 @@ def test(verbose=False):
 
 # Train the neural network
 accuracies = []
-for i in range(num_training_epochs):
+for i in range(num_training_epochs + 1):
+    if args.model_save_path and i % model_save_period == 0:
+        model.save(args.model_save_path[0] + '_' + str(i), i)
+    if i == num_training_epochs:
+        break
     if i % test_epoch_period == 0:
         accuracies.append(test(verbose=True))
         print(i, accuracies[-1])
-    if i % model_save_period == 0:
-        model.save(os.path.join(models_dir, args.model_save_path + ' ' + str(time.ctime()) + ' ' + str(i)), i)
     for rasters, masks in train_loader:
         print("Start : %s" % time.ctime())
-        print('raster shape: ', rasters.shape)
-        print('mask shape: ', masks.shape)
         output = model(rasters)
-        print('output shape: ', output.shape)
         # Cross entropy loss requires one-hot output and a non-one-hot target with labels 0...N-1 where N is the length
         # of the one-hot vectors
         loss = model.loss(output, masks)
