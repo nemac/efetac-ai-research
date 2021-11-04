@@ -7,7 +7,8 @@ import fiona
 from fiona.crs import from_epsg
 import geopandas as gpd
 from shapely.geometry import shape
-from config import shapefile_path, get_rasters
+from config import shapefile_path
+from utils import get_rasters
 
 
 # Takes the filename of a raster and retrieves the date.
@@ -55,7 +56,7 @@ for geom, date in zip(geoms, stormdates):
             dst.close()
 
         # Write version with tornado path mask
-        diff = rasterio.open(filename + '.tif')
+        """diff = rasterio.open(filename + '.tif')
         out_meta = diff.meta
         mask = rasterio.open(filename + '_mask.tif', 'w', **out_meta)
         mask.write(np.zeros((1,) + diff.shape, dtype=np.uint8))
@@ -69,4 +70,4 @@ for geom, date in zip(geoms, stormdates):
         with rasterio.open(filename + '_mask.tif', 'w', **out_meta) as dst:
             dst.write(out_img)
             dst.close()
-    count += 1
+    count += 1"""
