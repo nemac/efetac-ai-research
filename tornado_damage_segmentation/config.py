@@ -5,11 +5,9 @@ import rasterio
 assets_dir = 'data'
 raster_dir = os.path.join(assets_dir, 'ForWarn_Data')
 mask_dir = os.path.join(assets_dir, 'ForWarn_Masks')
-shapefile_dir = os.path.join(assets_dir, 'extractDamage2016_2021')
-shapefile_path = os.path.join(shapefile_dir, 'polys_2163', 'polys_2163.shp')
-
-# File paths for saved models
-models_dir = 'models'
+shapefile_dir = os.path.join(assets_dir, 'shapefiles')
+shapefile_path = os.path.join(shapefile_dir, 'polys_4326', 'nws_dat_damage_polys.shp')
+models_dir = os.path.join(assets_dir, 'models')  # File paths for saved models
 
 # Create necessary directories
 for directory in [assets_dir, raster_dir, mask_dir, shapefile_dir, models_dir]:
