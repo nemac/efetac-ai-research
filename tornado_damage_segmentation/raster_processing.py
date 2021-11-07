@@ -2,10 +2,7 @@
 from datetime import datetime as dt
 import numpy as np
 import rasterio
-import rasterio.mask
 import fiona
-from fiona.crs import from_epsg
-import geopandas as gpd
 from shapely.geometry import shape
 from config import shapefile_path
 from utils import get_rasters
@@ -17,43 +14,54 @@ def get_date_from_raster(raster):
     return dt.strptime(filename.split('.')[1], '%Y%m%d')
 
 
-# Reads a specified raster within a specified bounding box
-def read_raster_within_bounding_box(raster, bounding_box):
-    return raster.read(1, window=rasterio.windows.from_bounds(*bounding_box, transform=raster.transform))
-
-
 # Load data
 rasters = get_rasters()
+print(len(rasters))
 raster_dates = [get_date_from_raster(raster) for raster in rasters]
 shapefile = fiona.open(shapefile_path)
 geoms = np.array([feature['geometry'] for feature in shapefile])
 stormdates = np.array([dt.strptime(feature['properties']['stormdate'], '%Y-%m-%d') for feature in shapefile])
+assert len(geoms) == len(stormdates), "The lengths are not equal? Oh no, the Daleks are here!"
+
+#mask = stormdates == dt(2020, 4, 12)
+#geoms = geoms[mask]
+#stormdates = stormdates[mask]
 
 # Generate before-and-after images for each tornado within shapefile bounding box
-before = None
-after = None
 count = 0
 for geom, date in zip(geoms, stormdates):
+    before = None
+    after = None
     bbox = shape(geom).bounds
-    #geo = gpd.GeoDataFrame({'geometry': bbox}, index=[0], crs=rasters[0].crs)
     for raster_date, raster in zip(raster_dates, rasters):
         if raster_date < date:
             before = raster
         elif raster_date > date:
             after = raster
             break
+
     if before and after:
-        out_meta = before.meta
-        before = read_raster_within_bounding_box(before, bbox)
-        after = read_raster_within_bounding_box(after, bbox)
+        assert before.meta == after.meta, "Metas are not the same! The whole universe will come crashing down!!!"
+        out_meta = before.meta.copy()
+        window = rasterio.windows.from_bounds(*bbox, transform=before.transform)
+        out_trans = before.window_transform(window)
+        assert out_trans != before.transform, "What, they shouldn't be equal! The universe is exploding."
+        out_meta.update({'width': window.width, 'height': window.height, 'transform': out_trans})
+        before = before.read(1, window=window)
+        after = after.read(1, window=window)
         diff = after - before
-        filename = 'data\\diff' + str(count)
+        filename = 'data\\diffs\\diff' + str(count) + '_' + date.isoformat().split('T')[0].replace('-', '')
 
         # Write diff
-        with rasterio.open(filename + '.tif', 'w', **out_meta) as dst:
-            print('here goes')
-            dst.write(diff, 1)
-            dst.close()
+        if int(window.width) and int(window.height):
+            with rasterio.open(filename + '.tif', 'w', **out_meta) as dst:
+                print('here goes')
+                dst.write(diff, 1)
+                dst.close()
+
+            count += 1
+        else:
+            print('oh shit')
 
         # Write version with tornado path mask
         """diff = rasterio.open(filename + '.tif')
@@ -69,5 +77,4 @@ for geom, date in zip(geoms, stormdates):
         mask.close()
         with rasterio.open(filename + '_mask.tif', 'w', **out_meta) as dst:
             dst.write(out_img)
-            dst.close()
-    count += 1"""
+            dst.close()"""
