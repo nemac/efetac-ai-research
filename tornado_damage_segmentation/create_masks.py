@@ -4,7 +4,7 @@ import numpy as np
 import rasterio
 import rasterio.mask
 import fiona
-from config import mask_dir, shapefile_path
+from config import raster_dir, mask_dir, shapefile_path
 from utils import get_rasters
 
 # Get shapefile, shapes, and storm dates
@@ -13,7 +13,7 @@ shapes = np.array([feature['geometry'] for feature in shapefile])
 stormdates = np.array([dt.strptime(feature['properties']['stormdate'], '%Y-%m-%d') for feature in shapefile])
 
 # Create masks for ForWarn rasters
-for raster in get_rasters():
+for raster in get_rasters(raster_dir):
     filename = os.path.basename(raster.name)
     date = dt.strptime(filename.split('.')[1], '%Y%m%d')
     shapes_to_mask = shapes[np.logical_and(date - timedelta(days=183) < stormdates, stormdates < date)]

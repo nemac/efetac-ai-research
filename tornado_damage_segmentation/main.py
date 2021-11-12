@@ -19,13 +19,13 @@ parser.add_argument('-s', '--model-save-path', type=str, nargs=1)
 parser.add_argument('-l', '--model-load-path', type=str, nargs=1)
 parser.add_argument('-b', '--bbox-coords', type=int, nargs=4)
 args = parser.parse_args()
-
+smp.unet.Unet()
 # Parameters
 test_set_size = 50
 num_training_epochs = 10
 test_epoch_period = 2
 model_save_period = 2
-model = NeuralNet(loss=torch.nn.CrossEntropyLoss())
+model = NeuralNet(loss=smp.losses.JaccardLoss(mode='multiclass'))
 if args.model_load_path:
     model.load(args.model_load_path[0])
 iou_by_class = functools.partial(iou, reduce=False)
