@@ -7,11 +7,12 @@ import torch
 import torchvision
 from torch.utils.data import DataLoader, random_split
 import segmentation_models_pytorch as smp
-from config import raster_dir, mask_dir, models_dir
+from config import mask_dir, training_data
 from neural_net import NeuralNet
 from rasterio_dataset import RasterioDataset
 from metrics import simple_pixel_accuracy, iou
 from evaluator import Evaluator
+from utils import get_rasters_from_file
 
 # Command line arg processing
 parser = argparse.ArgumentParser()
@@ -25,7 +26,7 @@ test_set_size = 50
 num_training_epochs = 10
 test_epoch_period = 2
 model_save_period = 2
-model = NeuralNet(loss=smp.losses.JaccardLoss(mode='multiclass'))
+model = NeuralNet(loss=smp.losses.JaccardLoss(mode='multiclass', classes=[1]))
 if args.model_load_path:
     model.load(args.model_load_path[0])
 iou_by_class = functools.partial(iou, reduce=False)
@@ -43,11 +44,12 @@ evaluator = Evaluator(['Pixel accuracy', 'IoU', 'IoU for negative class', 'IoU f
                        ])
 
 # Load data
-data = RasterioDataset(raster_dir, mask_dir, args.bbox_coords, transform=torchvision.transforms.ToTensor())
+data = RasterioDataset(lambda: get_rasters_from_file(training_data), mask_dir, args.bbox_coords,
+                       transform=torchvision.transforms.ToTensor())
 
 # Split into training and testing sets and create data loaders
 train_data, test_data = random_split(data, [len(data) - test_set_size, test_set_size])
-train_loader = DataLoader(train_data, batch_size=10, shuffle=True)
+train_loader = DataLoader(train_data, batch_size=1, shuffle=True)
 test_loader = DataLoader(test_data)
 
 
@@ -97,8 +99,11 @@ for i in range(num_training_epochs + 1):
         print("End : %s" % time.ctime() + "\n")
 
 # Final evaluation
-#test(verbose=True)
 accuracies.append(test(verbose=True))
 print('Final Accuracy')
 print_accuracies(evaluator.metric_names, accuracies[-1])
 plt.plot(range(len(accuracies)), accuracies)
+plt.xlabel('Number of evaluations')
+plt.ylabel('Accuracy')
+plt.legend(evaluator.get_metric_names(), loc='upper right')
+plt.show()

@@ -1,16 +1,11 @@
 # TODO Lots of duplication from rasterio_dataset and create_mask, there's a better and more concise way to do all this.
 import os
 from datetime import datetime as dt
-from functools import partial
-import numpy as np
 import rasterio
 import rasterio.warp
-from rasterio.crs import CRS
-import pyproj
 import fiona
 from shapely.geometry import shape
-from shapely.ops import transform
-from utils import get_rasters, get_shapefiles
+from utils import get_rasters
 from config import raster_dir, shapefile_path
 
 
@@ -65,8 +60,8 @@ for directory in os.listdir(raster_dir):
                 before_arr = before.read(1, window=window)
                 after = after.read(1, window=window)
                 diff = after - before_arr
-                filename = os.path.join('data', 'diffs', 'diff') + str(count) + '_' \
-                    + date.isoformat().split('T')[0].replace('-', '') + '_' + before_name + '_' + after_name
+                filename = os.path.join('data', 'diffs', 'diff') + str(count) + '.' \
+                    + date.isoformat().split('T')[0].replace('-', '') + '.' + before_name + '_' + after_name
 
                 # Write diff
                 if int(window.width) and int(window.height):
@@ -78,19 +73,3 @@ for directory in os.listdir(raster_dir):
                     count += 1
                 else:
                     print('aww shucks')
-
-        # Write version with tornado path mask
-        """diff = rasterio.open(filename + '.tif')
-        out_meta = diff.meta
-        mask = rasterio.open(filename + '_mask.tif', 'w', **out_meta)
-        mask.write(np.zeros((1,) + diff.shape, dtype=np.uint8))
-        diff.close()
-        mask.close()
-        mask = rasterio.open(filename + '_mask.tif')
-        print(geom)
-        out_img, out_trans = rasterio.mask.mask(mask, np.array([geom]), invert=True, nodata=255)
-        out_meta.update({'transform': out_trans})
-        mask.close()
-        with rasterio.open(filename + '_mask.tif', 'w', **out_meta) as dst:
-            dst.write(out_img)
-            dst.close()"""

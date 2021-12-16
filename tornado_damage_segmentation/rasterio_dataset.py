@@ -14,7 +14,7 @@ class RasterioDataset(Dataset):
     vice versa, that image will not be included. Assumes rasters have only one band. \n
 
     Parameters: \n
-    image_path - the path to the folder containing raster images\n
+    raster_loader - a function used for loading raster data\n
     mask_path - the path to the folder containing raster masks\n
     bbox_coords - the coordinates of a rectangular geospatial bounding box defining what part of the raster data will
     be read. They should be expressed as a 4-dimensional vector like (left, bottom, right, top). If None, the entire
@@ -22,14 +22,15 @@ class RasterioDataset(Dataset):
     transform - the transform to use on each raster when it's read (default: None) \n
     """
 
-    def __init__(self, image_path: str, mask_path: str, bbox_coords: tuple = None, transform: tuple = None):
+    def __init__(self, raster_loader=None, mask_path: str = None, bbox_coords: tuple = None, transform: tuple = None):
         super().__init__()
-        self.image_path = image_path
+        self.raster_loader = raster_loader
         self.mask_path = mask_path
         self.bbox_coords = bbox_coords
         self.transform = transform
         self.rasters = []
-        self.load_rasters()
+        if raster_loader and mask_path:
+            self.load_data()
 
     def __len__(self):
         return len(self.rasters)
@@ -43,6 +44,10 @@ class RasterioDataset(Dataset):
         item[1] = torch.from_numpy(item[1]).type(torch.LongTensor)  # Cast to long required for loss functions
         return tuple(item)
 
+    # Adds a raster, mask pair to the dataset
+    def add(self, raster, mask):
+        self.rasters.append((raster, mask))
+
     # Reads a raster, but only returns the values within the rectangular bounding box specified by bbox_coords, if
     # provided. Otherwise, returns all values.
     def read_within_bounding_box(self, raster):
@@ -52,14 +57,12 @@ class RasterioDataset(Dataset):
         return raster.read(1, window=rasterio.windows.from_bounds(*bbox, transform=raster.transform))
 
     # Generates tuples of data, mask pairs
-    def load_rasters(self):
-        for path, dirs, files in os.walk(self.image_path):
-            for file in files:
-                image_path = os.path.join(path, file)
-                mask_path = os.path.join(self.mask_path, file)
-                if os.path.exists(mask_path):
-                    self.rasters.append((rasterio.open(image_path), rasterio.open(mask_path)))
-                    continue
-                # If there is no corresponding mask file, skip this image and warn
-                warnings.warn('The mask at ' + mask_path + ' corresponding to the image at ' + image_path + ' does not'
-                              + ' exist. This image will not be added to the dataset.', MaskNotPresentWarning)
+    def load_data(self):
+        for raster in self.raster_loader():
+            mask_path = os.path.join(self.mask_path, os.path.basename(raster.name))
+            if os.path.exists(mask_path):
+                self.rasters.append((raster, rasterio.open(mask_path)))
+                continue
+            # If there is no corresponding mask file, skip this image and warn
+            warnings.warn('The mask at ' + mask_path + ' corresponding to the image at ' + raster.name + ' does not'
+                          + ' exist. This image will not be added to the dataset.', MaskNotPresentWarning)
